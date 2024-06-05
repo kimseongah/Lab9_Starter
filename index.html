@@ -6,6 +6,14 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script>
+    window.TrackJS && TrackJS.install({ 
+      token: "f1af2f46da96433eb587d402d5c9fc8f",
+      application: "lab9"
+      // for more configuration options, see https://docs.trackjs.com
+    });
+  </script>         
 
   <style>
     button {
@@ -88,6 +96,34 @@
   </main>
 
   <script>
+    class CalculatorError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'CalculatorError';
+      }
+    }
+
+    class MissingNumberError extends CalculatorError {
+      constructor() {
+        super('Both numbers are required');
+        this.name = 'MissingNumberError';
+      }
+    }
+
+    class InvalidNumberError extends CalculatorError {
+      constructor() {
+        super('Both inputs must be valid numbers');
+        this.name = 'InvalidNumberError';
+      }
+    }
+
+    class DivisionByZeroError extends CalculatorError {
+      constructor() {
+        super('Division by zero is not allowed');
+        this.name = 'DivisionByZeroError';
+      }
+    }
+
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -95,13 +131,91 @@
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
-    });
 
+      try {
+        if (firstNum === '' || secondNum === '') {
+          throw new MissingNumberError();
+        }
+        if (isNaN(firstNum) || isNaN(secondNum)) {
+          throw new InvalidNumberError();
+        }
+        if (operator === '/' && secondNum == 0) {
+          throw new DivisionByZeroError();
+        }
+        let result = eval(`${firstNum} ${operator} ${secondNum}`);
+        output.innerHTML = result;
+      } catch (error) {
+        if (error instanceof CalculatorError) {
+          output.innerHTML = `${error.message}`;
+          TrackJS.track(error.message);
+        } else {
+          output.innerHTML = 'An unexpected error occurred';
+        }
+        console.log(error);
+      } finally {
+        console.log('Calculation attempt');
+      }
+    });
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
     // Start your code here
     // You may move this JS to another file if you wish
+    let funcForError = [
+      () => console.log('Console Log Demo'),
+      () => console.error('Console Error Demo'),
+      () => console.count('Count Button'),
+      () => console.warn('Console Warn Button'),
+      () => console.assert(2 == 3, { number: 2, errorMsg: 'The number does not equal 3' }),
+      () => console.clear(),
+      (element) => console.dir(element),
+      (element) => console.dirxml(element),
+      () => console.group(),
+      () => console.groupEnd(),
+      () => table(),
+      () => console.time('Timer Button'),
+      () => console.timeEnd('Timer Button'),
+      () => handleBtnClick(),
+      () => boom()
+    ];
+
+    // Add event listeners to each button
+    for (let i = 0; i < errorBtns.length; i++) {
+      errorBtns[i].addEventListener('click', function () {
+        try {
+          funcForError[i].call(this);
+        } catch (error) {
+          TrackJS.track(error.message);
+          console.error(`Error occurred in button ${i + 1}:`, error);
+        }
+      });
+    }
+
+    function table()
+     {
+      const tableData = [
+            ["Software Engineering", 110],
+            ["Programming Language", 130],
+            ["Advanced Software Engineering", 112],
+          ]
+      console.table(tableData);
+     }
+
+     function handleBtnClick()
+     {
+      function deep()
+      {
+        function deeper()
+        {
+          function deepest()
+          {
+            console.trace();
+          }
+          deepest();
+        }
+        deeper();
+      }
+      deep();
+     }    
   </script>
 </body>
 
