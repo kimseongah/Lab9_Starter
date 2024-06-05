@@ -175,9 +175,11 @@
       () => console.time('Timer Button'),
       () => console.timeEnd('Timer Button'),
       () => handleBtnClick(),
-      () => boom()
+      () => triggerGlobalError()
     ];
-
+    function triggerGlobalError() {
+      nonExistentFunction();
+    }
     // Add event listeners to each button
     for (let i = 0; i < errorBtns.length; i++) {
       errorBtns[i].addEventListener('click', function () {
@@ -216,6 +218,27 @@
       }
       deep();
      }    
+     function fetchData() {
+      try {
+        fetch('https://invalidurl.com/data')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => console.log(data))
+          .catch(error => {
+            console.error('Fetch error:', error);
+          });
+      } catch (error) {
+        console.error('Caught fetch error:', error);
+      }
+    }
+     window.onerror = function (message, source, lineno, colno, error) {
+      console.log('Global error caught:', message);
+      return true;
+    };
   </script>
 </body>
 
